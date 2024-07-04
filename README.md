@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Tree UI
 
-## Getting Started
+## How to run 
 
-First, run the development server:
+* Run `docker build .` to build the image.
+* Run `docker run -p 3000:3000 <imagetag or imageid>`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Technology
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* NextJS
+* Bootstrap
+* react
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tree Balancing Algorithm
+It is using a balanced BST approach. Internally after generating the tree , it is converted to a sorted list and we make the mid element root. This makes it balance.
+A stronger approach might have been to use some self balancing tree like AVL. 
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Backend 
 
-## Learn More
+Let's walk through different DBs available and see their feasibility
+* In memory
 
-To learn more about Next.js, take a look at the following resources:
+We can move to a B-Tree or B+ Tree datastructure which attempts to keep the leaf node in a same depth . The rate of increasing the depth of the tree will be much slower. 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* RDBMS
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+   - We can use JSONB column type with GIN index.
+   - We can add an tree_id column to identify the tree.
+   - Each balance is an update. Based on scenario we can either full update or patch. 
 
-## Deploy on Vercel
+* NoSql 
+  -  Moving to NoSql like mongo make sense when we have complex queries, aggregates or we have high amount of load. 
+  - From the problem it is not clear how much load is expected so without that moving to NoSQL is premature . 
+  - We will also need devs who knows Mongo to operate it. 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  * Graph DB 
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  Trees are fundamentally acyclic unidirectional graph. We can opt for Graph based DB like Neo4j. 
+  Now this move will only be justified if we have a requirment to preserve the relationship. GraphDBs has relationship as a first class citizen and we can quickly go bidirectional and also find sibling relationships. 
+
+## Conclusion
+  Given this particular scope of the work and with many unknowns like scaling requirement, relationship requirement I will still start with Postgres and JSONB datastructure and switch to other solution only if it requires. 

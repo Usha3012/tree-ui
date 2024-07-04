@@ -1,95 +1,126 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
 
-export default function Home() {
+import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const TreePage = () => {
+  const [depth, setDepth] = useState(1);
+  const [maxChildren, setMaxChildren] = useState(1);
+  const [tree, setTree] = useState<TreeNode | null>(null);
+  const [textareaValue, setTextareaValue] = useState<string>('');
+
+  const handleDepthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(1, parseInt(e.target.value));
+    setDepth(value);
+  };
+
+  const handleMaxChildrenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(1, parseInt(e.target.value));
+    setMaxChildren(value);
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextareaValue(e.target.value);
+  };
+
+  type TreeNode = {
+    value: number;
+    children: TreeNode[];
+  };
+  
+  const generateTree = (depth: number, maxChildren: number): TreeNode => {
+    const createNode = (currentDepth: number): TreeNode => {
+      if (currentDepth > depth) return null!;
+      const numChildren = Math.floor(Math.random() * maxChildren) + 1;
+      return {
+        value: Math.floor(Math.random() * 100),
+        children: Array.from({ length: numChildren }, () => createNode(currentDepth + 1)).filter(
+          (child) => child !== null
+        ),
+      };
+    };
+    return createNode(1);
+  };
+
+  const balanceTree = (root: TreeNode): TreeNode => {
+    const values: number[] = [];
+  
+    const traverse = (node: TreeNode) => {
+      values.push(node.value);
+      node.children.forEach(traverse);
+    };
+  
+    traverse(root);
+  
+    values.sort((a, b) => a - b);
+  
+    const buildBalancedBST = (sortedValues: number[]): TreeNode => {
+      if (sortedValues.length === 0) return null!;
+      const mid = Math.floor(sortedValues.length / 2);
+      return {
+        value: sortedValues[mid],
+        children: [
+          buildBalancedBST(sortedValues.slice(0, mid)),
+          buildBalancedBST(sortedValues.slice(mid + 1)),
+        ].filter((child) => child !== null),
+      };
+    };
+  
+    return buildBalancedBST(values);
+  };
+  const handleNewTree = () => {
+    const newTree = generateTree(depth, maxChildren);
+    setTree(newTree);
+    setTextareaValue(JSON.stringify(newTree, null, 2));
+  };
+
+  const handleBalanceTree = () => {
+    if (tree) {
+      const balancedTree = balanceTree(tree);
+      setTextareaValue(JSON.stringify(balancedTree, null, 2));
+    }
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <div className="container mt-4">
+      <div className="mb-3">
+        <textarea
+          className="form-control"
+          rows={10}
+          value={textareaValue}
+          onChange={handleTextareaChange}
         />
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <form className="row g-3">
+        <div className="col-md-3">
+          <label htmlFor="depthInput" className="form-label">Tree Depth</label>
+          <input
+            type="number"
+            id="depthInput"
+            className="form-control"
+            value={depth}
+            onChange={handleDepthChange}
+            min="1"
+          />
+        </div>
+        <div className="col-md-3">
+          <label htmlFor="maxChildrenInput" className="form-label">Max Children per Node</label>
+          <input
+            type="number"
+            id="maxChildrenInput"
+            className="form-control"
+            value={maxChildren}
+            onChange={handleMaxChildrenChange}
+            min="1"
+          />
+        </div>
+        <div className="col-md-3 align-self-end">
+          <button type="button" className="btn btn-primary me-2" onClick={handleNewTree}>New</button>
+          <button type="button" className="btn btn-secondary" onClick={handleBalanceTree}>Balance</button>
+        </div>
+      </form>
+    </div>
   );
-}
+};
+
+export default TreePage;
